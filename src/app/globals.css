@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+
+   The palette is the brief's, with two additions that the logo forced: the
+   emblem is red/navy/gold, so `wine` carries real structural weight (rules,
+   snooker accents, the snooker card) rather than being ornament, and `gold`
+   is the connective tissue between the emblem and the page.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* Surfaces, darkest first. */
+  --color-ink: #080a09;
+  --color-ink-raised: #0c1210;
+  --color-forest: #101c17;
+  --color-forest-raised: #16271f;
+
+  /* Baize. `lit` is the colour felt goes under the overhead lamp. */
+  --color-baize: #126b45;
+  --color-baize-lit: #1a8f5b;
+  --color-baize-deep: #0a3f28;
+
+  /* Metal. */
+  --color-gold: #d6b46a;
+  --color-gold-dim: #7c6838;
+
+  /* Type. */
+  --color-bone: #f4f0e8;
+  --color-ash: #a1a7a2;
+
+  /* The logo's red, pulled to the brief's burgundy. */
+  --color-wine: #762c32;
+  --color-wine-lit: #a03a42;
+
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion. Every transition in the site picks from these four. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --duration-tap: 120ms;
+  --duration-hover: 260ms;
+  --duration-panel: 480ms;
+  --duration-scene: 900ms;
+}
+
+@theme inline {
+  --color-background: var(--color-ink);
+  --color-foreground: var(--color-bone);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Lenis drives scrolling; native smooth would fight it. */
+    scroll-behavior: auto;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Nothing in this site scrolls sideways. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-ink);
+  }
+
+  /* One focus treatment, everywhere, and it is never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Canvas elements take focus for keyboard aiming; keep the ring outside. */
+  canvas:focus-visible {
+    outline-offset: -2px;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities the design leans on repeatedly
+--------------------------------------------------------------------------- */
+
+@utility gutter {
+  padding-inline: max(1rem, env(safe-area-inset-left));
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+/* Editorial measure. Body copy never runs wider than this. */
+@utility measure {
+  max-width: 62ch;
+}
+
+/* The hairline that separates sections, gold at 12%. */
+@utility rule-gold {
+  border-top: 1px solid color-mix(in oklab, var(--color-gold) 16%, transparent);
+}
+
+/* Small caps label used above every section heading. */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion gate
+
+   Everything animated in this site is either a CSS transition that inherits
+   these durations, or a GSAP timeline that checks `prefers-reduced-motion`
+   before it is built. This block catches the CSS half.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+  Fail-safe for the hero copy.
+
+  Those lines start at opacity 0 so they can arrive after the break settles.
+  If the JavaScript never runs — opened straight off the disk, a blocked
+  bundle, a dead CDN — nothing would ever bring them back, and the page would
+  have no words. This brings them in at six seconds regardless. GSAP normally
+  beats it by a wide margin, so it is never seen.
+*/
+[data-reveal] {
+  animation: reveal-failsafe 1ms linear 6s forwards;
+}
+
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    animation-delay: 0s;
+  }
+}
+
+/* A slow bob for the flat props standing in for photographs. Deliberately not
+   a rotation — spinning a 2D sphere turns its highlight with it, which reads
+   as a disc rather than a ball. */
+@keyframes prop-float {
+  0%,
+  100% {
+    transform: translateY(-5%);
+  }
+  50% {
+    transform: translateY(5%);
+  }
+}
+
+@keyframes intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Hide the native cursor only where a real pointer exists and the custom
+   reticle is actually mounted. Touch and keyboard users keep theirs. */
+@media (pointer: fine) {
+  html[data-cursor="custom"],
+  html[data-cursor="custom"] * {
+    cursor: none;
+  }
+}
