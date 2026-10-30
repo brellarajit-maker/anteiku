@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+# The site is a static export, so there is nothing to run in production — the
+# build produces plain files and Pages serves them. No extra service, no
+# account, nothing to pay for.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the static export
+        run: npm run build
+        env:
+          # Absolute URLs in the metadata (the social card) need the real
+          # domain; everything else on the page is relative and works at any
+          # path. Change this if you move to a custom domain.
+          NEXT_PUBLIC_SITE_URL: https://brellarajit-maker.github.io/anteiku
+
+      # Pages runs Jekyll by default, and Jekyll ignores folders starting with
+      # an underscore — which would drop the whole of _next/ and serve a blank
+      # page. This switches it off.
+      - run: touch out/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

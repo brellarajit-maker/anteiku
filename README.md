@@ -43,6 +43,19 @@ than ES modules, so the page loads straight off the disk. Web fonts may be
 blocked by the browser's file:// rules and fall back to a system face — serve
 it with `npm start` if the type looks wrong.
 
+### Going live
+
+`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every
+push to `main`. **One manual step first:** in the repository, go to
+**Settings → Pages** and set **Source** to **GitHub Actions**. After that it
+deploys itself to
+`https://brellarajit-maker.github.io/anteiku`.
+
+Pages serves a project repo from a sub-path, which works here only because the
+page's own assets are relative. Absolute URLs in the metadata (the social card)
+come from `NEXT_PUBLIC_SITE_URL`, set in the workflow — change it there if you
+move to a custom domain.
+
 ### From a terminal
 
 **Node is installed but not on this machine's PATH**, at
